@@ -46,3 +46,9 @@
     <a asp-action="Edit" class="btn btn-lg btn-primary" asp-route-id="@Model.ID">Edit</a> |
     <a asp-action="Index" class="btn btn-lg btn-primary">Back to List</a>
 </div>
+
+@{
+    var url = ViewData["Poster"];
+}
+
+<img src='@ViewData["Poster"]' alt="" />

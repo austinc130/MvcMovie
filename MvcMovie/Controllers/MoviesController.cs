@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MvcMovie.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MvcMovie.Controllers
 {
@@ -176,5 +179,53 @@ namespace MvcMovie.Controllers
         {
             return _context.Movie.Any(e => e.ID == id);
         }
+
+
+        public async Task<IActionResult> GetFromIMDB(string title)
+        {
+            HttpClient client = new HttpClient();
+
+            string url = "http://www.omdbapi.com/?t=" + title + "&apikey=3c21ef03";
+            var response = await client.GetAsync(url);
+            var data = await response.Content.ReadAsStringAsync();
+
+            var json = JsonConvert.DeserializeObject(data).ToString();
+            dynamic omdbMovie = JObject.Parse(json);
+
+            string genre = omdbMovie["Genre"];
+            string[] genreList = genre.Split(", ");
+
+            Movie movie = new Movie();
+            try
+            {
+                movie.Title = omdbMovie["Title"];
+                movie.ReleaseDate = omdbMovie["Released"];
+                movie.Genre = genreList[0];
+                movie.Rating = omdbMovie["Rated"];
+                movie.Poster = omdbMovie["Poster"];
+            }
+            catch
+            {
+                return View("Create");
+            }
+
+            ModelState.AddModelError("Price", "PRICE REQUIRED");
+            return View("Create", movie);
+        }
     }
 }
+
+
+
+//May not belong here; syntax is incorrect
+//Prevents duplicate entries
+/*
+if (omdbMovie["Title"] == null)
+{
+    return "Movie not found!" under input box;
+}
+foreach(movie obj in Database){
+if (omdbMovie["Title"] == movie obj["Title"])
+{ 
+    return "Movie is already listed" under input box;
+}*/
